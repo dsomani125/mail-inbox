@@ -4,10 +4,12 @@ import styled from "styled-components";
 import MailData from "@/components/maildata";
 import { mailDataType } from "@/types";
 import { Drawer } from "@mui/material";
+import { useRouter } from "next/router";
 
 const Home = () => {
+  const router = useRouter();
+  const { query } = router.query;
   const [mailData, setMailData] = useState([]);
-  const [tagFilter, setTagFilter] = useState<string>("INBOX");
   const [search, setSearch] = useState<string>("");
   const [searchData, setSearchData] = useState<any>([]);
   const [openDrawer, setOpenDrawer] = useState<boolean>(false);
@@ -17,7 +19,6 @@ const Home = () => {
   });
 
   const handleOnClick = (data: mailDataType) => {
-
     setOpenDrawer(true);
     values.current.subject = data.subject;
     values.current.body = data.body;
@@ -35,20 +36,21 @@ const Home = () => {
         console.log(error);
       }
     })();
-    const tag = sessionStorage.getItem("tag");
-    tag && setTagFilter(tag);
   }, []);
 
   useEffect(() => {
-    setSearchData([]);
-    mailData.map((data: mailDataType) => {
-      const joinData = data.subject.toLowerCase();
-      if (joinData.includes(search.toLowerCase())) {
-        const list = searchData;
-        list.push(data);
-        setSearchData(list);
-      }
-    });
+    const newSearchData: any = [];
+    mailData
+      .filter((data: mailDataType) =>
+        query ? data.tag.toLowerCase() === query : data
+      )
+      .map((data: mailDataType) => {
+        const joinData = data.subject.toLowerCase();
+        if (joinData.includes(search.toLowerCase())) {
+          newSearchData.push(data);
+          setSearchData(newSearchData);
+        }
+      });
   }, [search]);
 
   return (
@@ -65,12 +67,7 @@ const Home = () => {
           </DrawerContainer>
         </Drawer>
       )}
-      <NavBar
-        tagFilter={tagFilter}
-        setTagFilter={setTagFilter}
-        setSearch={setSearch}
-        search={search}
-      />
+      <NavBar setSearch={setSearch} search={search} />
       <Parent>
         {search.length &&
           searchData.map((data: mailDataType) => (
@@ -87,7 +84,7 @@ const Home = () => {
         {!search.length &&
           mailData
             .filter((data: mailDataType) =>
-              tagFilter !== "ALL" ? data.tag.toUpperCase() === tagFilter : data
+              query ? data.tag.toLowerCase() === query : data
             )
             .map((data: mailDataType) => (
               <MailData

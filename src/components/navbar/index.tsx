@@ -7,58 +7,56 @@ import DraftsIcon from "@mui/icons-material/Drafts";
 import DeleteIcon from "@mui/icons-material/Delete";
 import ReportGmailerrorredIcon from "@mui/icons-material/ReportGmailerrorred";
 import AllInclusiveIcon from "@mui/icons-material/AllInclusive";
+import { useRouter } from "next/router";
 
 type tagType = {
   index: number;
   img: JSX.Element;
   name: string;
+  queryName: string;
 };
 
 type NavBarProps = {
-  tagFilter: string;
-  setTagFilter: (value: string) => void;
   setSearch: (value: string) => void;
   search: string;
 };
 
 const NavBar = ({
-  setTagFilter,
-  tagFilter,
   setSearch,
   search,
 }: NavBarProps) => {
+  const router = useRouter();
+  const { query } = router.query;
   const [openSideBar, setOpenSideBar] = useState(false);
   const tagsData = [
-    {
-      index: 0,
-      name: "All",
-      img: <AllInclusiveIcon />,
-    },
     {
       index: 1,
       name: "Inbox",
       img: <InboxIcon />,
+      queryName: "inbox",
     },
     {
       index: 2,
       name: "Draft",
       img: <DraftsIcon />,
+      queryName: "draft",
     },
     {
       index: 3,
       name: "Spam",
       img: <ReportGmailerrorredIcon />,
+      queryName: "spam",
     },
     {
       index: 4,
       name: "Trash",
       img: <DeleteIcon />,
+      queryName: "trash",
     },
   ];
 
-  const updateTagFilter = (name: string) => {
-    setTagFilter(name.toUpperCase());
-    sessionStorage.setItem("tag", name.toUpperCase());
+  const updateTagFilter = (name: string, queryName: string) => {
+    router.push(`/?query=${queryName}`);
   };
 
   return (
@@ -87,12 +85,12 @@ const NavBar = ({
         onClose={() => setOpenSideBar(!openSideBar)}
       >
         <DrawerContainer>
-          {tagsData.map(({ index, img, name }: tagType) => (
+          {tagsData.map(({ index, img, name, queryName }: tagType) => (
             <TagContainer
               key={index}
               name={name}
-              tagFilter={tagFilter}
-              onClick={() => updateTagFilter(name)}
+              tagFilter={typeof query === 'string' ? query : "inbox"}
+              onClick={() => updateTagFilter(name, queryName)}
             >
               {img}
               {name}
@@ -138,5 +136,5 @@ const TagContainer = styled.div<{
   padding: 10px 100px 10px 10px;
   border-radius: 8px;
   ${(props: any) =>
-    props.name.toUpperCase() === props.tagFilter ? `background : #80bfff` : ""}
+    props.name.toLowerCase() === props.tagFilter ? `background : #80bfff` : ""}
 `;
